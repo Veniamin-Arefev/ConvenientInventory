@@ -225,15 +225,16 @@ namespace ConvenientInventory
             private static bool Prefix(Inventory __instance, ref Inventory otherInventory, ref HashSet<Inventory> __state)
             {
                 //logger.LogError("TransferSimilarToOtherInventory Prefix: main logic + save state");
-                ChestManager.associatedChests.TryGetValue(otherInventory, out var chest);
-                string targetChestName = chest? chest.chestName.text: "";
-                logger.LogError($"Other inv name is {targetChestName}");
-                if (!targetChestName.StartsWith("~exc"))
-                {
-                    __state = OriginalTransferSimilarToOtherInventory(__instance, otherInventory);
-                } else
+                bool foundChest = ChestManager.associatedChests.TryGetValue(otherInventory, out var chest);
+                string targetChestName = chest?.chestName?.text;
+                //logger.LogError($"Other inv name is {targetChestName}, found chest: {foundChest}");
+                if (targetChestName is not null && targetChestName.StartsWith("~exc"))
                 {
                     __state = new HashSet<Inventory>();
+                }
+                else
+                {
+                    __state = OriginalTransferSimilarToOtherInventory(__instance, otherInventory);
                 }
                 return false;
             }
@@ -312,13 +313,13 @@ namespace ConvenientInventory
             {
                 if (Player.Instance && Input.GetKeyDown(QuickSortKeyCode))
                 {
-                    logger.LogError("Sort player inventory");
-                    Player.Instance.PlayerInventory.SortPlayerInventory();                    
+                    logger.LogInfo("Sort player inventory");
+                    Player.Instance.PlayerInventory.SortPlayerInventory();
                 }
                 if (Player.Instance && Input.GetKeyDown(QuickStackKeyCode))
                 {
-                    logger.LogError("Quick stack to nearby chests");
-                    Player.Instance.PlayerInventory.TransferToNearbyChests();                    
+                    logger.LogInfo("Quick stack to nearby chests");
+                    Player.Instance.PlayerInventory.TransferToNearbyChests();
                 }
             }
         }
