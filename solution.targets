@@ -1,0 +1,140 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+        <Description>$(MSBuildProjectName)</Description>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <BepInExPath>$(GamePath)\BepInEx</BepInExPath>
+        <ManagedDataPath>..\Managed</ManagedDataPath>
+        <UnityPath>$(GamePath)\Sun Haven_Data\Managed</UnityPath>
+    </PropertyGroup>
+
+    <!-- Set start action -->
+    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+        <StartAction>Program</StartAction>
+        <StartProgram>$(GamePath)\Sun Haven.exe</StartProgram>
+        <StartArguments>-console</StartArguments>
+        <StartWorkingDirectory>$(GamePath)</StartWorkingDirectory>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+        <PackageReference Include="BepInEx.Core" Version="5.*" />
+        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+        <PackageReference Include="UnityEngine.Modules" Version="2019.3.15" IncludeAssets="compile" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Sirenix.Serialization">
+            <HintPath>$(ManagedDataPath)\Sirenix.Serialization.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SunHaven.Core" Publicize="true">
+            <HintPath>$(ManagedDataPath)\SunHaven.Core.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="PSS" Publicize="true">
+            <HintPath>$(ManagedDataPath)\PSS.Database.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <HintPath>$(ManagedDataPath)\UnityEngine.UI.dll</HintPath>
+            <Private>false</Private>
+        </Reference>        
+        <Reference Include="Unity.ResourceManager">
+            <HintPath>$(ManagedDataPath)\Unity.ResourceManager.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <HintPath>$(ManagedDataPath)\Unity.TextMeshPro.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="ZeroFormatter">
+            <HintPath>$(ManagedDataPath)\ZeroFormatter.dll</HintPath>
+            <Private>false</Private>
+        </Reference>        
+        <Reference Include="ZeroFormatter">
+            <HintPath>$(ManagedDataPath)\ZeroFormatter.Interfaces.dll</HintPath>
+            <Private>false</Private>
+        </Reference>        
+        <Reference Include="DOVirtual">
+            <HintPath>$(ManagedDataPath)\DOTween.dll</HintPath>
+            <Private>false</Private>
+        </Reference>        
+        <Reference Include="Mirror">
+            <HintPath>$(ManagedDataPath)\Mirror.dll</HintPath>
+            <Private>false</Private>
+        </Reference>        
+        <Reference Include="System.Core">
+            <HintPath>$(ManagedDataPath)\System.Core.dll</HintPath>
+            <Private>false</Private>
+        </Reference>       
+        <Reference Include="Assembly-CSharp">
+            <HintPath>$(ManagedDataPath)\Assembly-CSharp.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SteamWorks">
+            <HintPath>$(ManagedDataPath)\com.rlabrecque.steamworks.net.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="I2.Loc">
+            <HintPath>$(ManagedDataPath)\I2Localization.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="QFSW.QC">
+            <HintPath>$(ManagedDataPath)\QFSW.QC.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <Publicize Include="SunHaven.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(ProjectDir)files\**" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+       
+
+    <!-- Copy to plugins folder and zip -->
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <ItemGroup>
+            <IncludedFiles Include="$(TargetDir)\files\**\*.*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(IncludedFiles)" DestinationFolder="$(TargetDir)\%(RecursiveDir)" SkipUnchangedFiles="true" />
+        <RemoveDir Directories="$(TargetDir)\Files" />
+        <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+            <AllFiles Include="$(TargetDir)**" />
+        </ItemGroup>
+        <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+            <AllFiles Include="$(TargetDir)**" Exclude="$(TargetDir)**\*.pdb" />
+        </ItemGroup>
+        <Copy SourceFiles="@(AllFiles)" DestinationFolder="$(GamePath)\BepInEx\plugins\$(PluginReleasePath)\%(RecursiveDir)"></Copy>
+        <Delete Files="$(ProjectDir)\bin\$(TargetName)-$(Version).zip" />
+        <Copy SourceFiles="@(AllFiles)" DestinationFolder="$(TargetDir)..\Release\$(PluginReleasePath)\%(RecursiveDir)"></Copy>
+        <ZipDirectory SourceDirectory="$(TargetDir)..\Release" DestinationFile="$(ProjectDir)\bin\$(TargetName)-$(Version).zip" />
+        <RemoveDir Directories="$(TargetDir)..\Release" />
+    </Target>
+</Project>
